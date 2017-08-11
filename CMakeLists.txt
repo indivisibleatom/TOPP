@@ -13,7 +13,7 @@
 # limitations under the License.
 cmake_minimum_required (VERSION 2.8.0)
 project(topp)
-set( CMAKE_ALLOW_LOOSE_LOOP_CONSTRUCTS TRUE )
+set(CMAKE_ALLOW_LOOSE_LOOP_CONSTRUCTS TRUE)
 
 set (TOPP_VERSION_MAJOR 0)
 set (TOPP_VERSION_MINOR 1)
@@ -114,54 +114,14 @@ if( NOT Boost_THREAD_LIBRARY OR NOT Boost_DATE_TIME_LIBRARY )
 endif()
 
 
-include(FindPythonInterp)
-## check python
-find_package(PythonLibs) # using PYTHON_INCLUDE_PATH instead of PYTHON_INCLUDE_DIRS?
-if( NOT PYTHON_EXECUTABLE )
-  # look specifically for 2.6
-  find_program(PYTHON_EXECUTABLE NAMES python2.6 python PATHS [HKEY_LOCAL_MACHINE\\SOFTWARE\\Python\\PythonCore\\2.6\\InstallPath])
-endif()
+find_package(PythonInterp 3.0 REQUIRED)
+find_package(PythonLibs 3.0 REQUIRED)
 
-# back compat?
 if( NOT PYTHON_INCLUDE_DIRS )
   set(PYTHON_INCLUDE_DIRS ${PYTHON_INCLUDE_PATH})
 endif()
 
-if( PYTHON_EXECUTABLE )
-  get_filename_component(PYTHON_EXECUTABLE_NAME ${PYTHON_EXECUTABLE} NAME)
-  execute_process(
-    COMMAND ${PYTHON_EXECUTABLE} -c "import numpy; print numpy.get_include()"
-    OUTPUT_VARIABLE _python_numpy_include OUTPUT_STRIP_TRAILING_WHITESPACE
-    RESULT_VARIABLE _python_failed0)
-  execute_process(
-    COMMAND ${PYTHON_EXECUTABLE} -c "from distutils.sysconfig import get_python_lib; from os.path import relpath; print relpath(get_python_lib(1,prefix='${CMAKE_INSTALL_PREFIX}'),'${CMAKE_INSTALL_PREFIX}')"
-    OUTPUT_VARIABLE TOPP_PYTHON_INSTALL_DIR OUTPUT_STRIP_TRAILING_WHITESPACE
-    WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
-    RESULT_VARIABLE _python_failed2)
-
-  if( ${_python_failed0} EQUAL 0 AND ${_python_failed2} EQUAL 0 )
-    if( NOT IS_DIRECTORY "${_python_numpy_include}" )
-      set(PYTHON_EXECUTABLE)
-    else()
-      set(PYTHON_INCLUDE_DIRS ${PYTHON_INCLUDE_DIRS} ${_python_numpy_include})
-    endif()
-
-    # get the major.minor python version
-    execute_process(
-      COMMAND ${PYTHON_EXECUTABLE} -c "import sys; print('%d.%d'%sys.version_info[0:2])"
-      OUTPUT_VARIABLE _python_version OUTPUT_STRIP_TRAILING_WHITESPACE
-      RESULT_VARIABLE _python_failed)
-    if( ${_python_failed} EQUAL 0 )
-      string(REGEX REPLACE "[\r\n]" "" PYTHON_MAJORMINOR_VERSION "${_python_version}")
-    else()
-      message(STATUS "failed to get python version")
-    endif()
-  else()
-    message(STATUS "failed to get python site-package directories via get_python_lib")
-    set(PYTHON_EXECUTABLE)
-  endif()
-endif()
-
+set(TOPP_PYTHON_INSTALL_DIR ${CMAKE_BINARY_DIR}/lib)
 set(TOPPPY_INSTALL_DIR "${TOPP_PYTHON_INSTALL_DIR}/TOPP" CACHE PATH "TOPP Python bindings installation directory")
 
 find_package(PkgConfig) # pkg_check_modules
@@ -174,12 +134,3 @@ else()
 endif()
 
 add_subdirectory(src)
-
-# add make uninstall capability
-#configure_file("${CMAKE_CURRENT_SOURCE_DIR}/cmake_uninstall.cmake.in" "${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake" IMMEDIATE @ONLY)
-#add_custom_target(uninstall "${CMAKE_COMMAND}" -P "${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake")
-
-#configure_file("${CMAKE_CURRENT_SOURCE_DIR}/topp-config.cmake.in" "${CMAKE_CURRENT_BINARY_DIR}/topp-config.cmake" IMMEDIATE @ONLY)
-#configure_file("${CMAKE_CURRENT_SOURCE_DIR}/topp-config-version.cmake.in" "${CMAKE_CURRENT_BINARY_DIR}/topp-config-version.cmake" IMMEDIATE @ONLY)
-
-#install(FILES "${CMAKE_CURRENT_BINARY_DIR}/topp-config.cmake" "${CMAKE_CURRENT_BINARY_DIR}/topp-config-version.cmake" DESTINATION "lib${LIB_SUFFIX}/cmake/${TOPP_CMAKE_INSTALL_DIR}")

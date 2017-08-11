@@ -16,7 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-from Utilities import vect2str, BezierToTrajectoryString
+from .Utilities import vect2str, BezierToTrajectoryString
 import string
 from pylab import double, array, random
 from TOPPbindings import TOPPInstance

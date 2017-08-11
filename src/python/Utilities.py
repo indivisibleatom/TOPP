@@ -1,6 +1,6 @@
 from numpy import *
 from scipy import interpolate
-import Trajectory
+from . import Trajectory
 
 def InterpolateViapoints(path):
     nviapoints = len(path[0,:])

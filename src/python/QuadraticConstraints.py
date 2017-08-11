@@ -16,12 +16,12 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-import TOPPpy
+from . import TOPPpy
 
-from Errors import NoTrajectoryFound, TOPP_OK
-from Trajectory import PiecewisePolynomialTrajectory
+from .Errors import NoTrajectoryFound, TOPP_OK
+from .Trajectory import PiecewisePolynomialTrajectory
 from TOPPbindings import TOPPInstance
-from TOPPpy import ProfilesFromString, SwitchPointsFromString, PlotProfiles
+from .TOPPpy import ProfilesFromString, SwitchPointsFromString, PlotProfiles
 
 
 class QuadraticConstraints(object):
