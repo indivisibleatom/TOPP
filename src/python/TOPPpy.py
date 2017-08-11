@@ -39,7 +39,7 @@ def ProfilesFromString(s):
     s = s.strip(" \n")
     profileslist = []
     lines = [l.strip(" \n") for l in s.split('\n')]
-    n = len(lines) / 3
+    n = int(len(lines) / 3)
     for i in range(n):
         l = ProfileFromLines(lines[3 * i:3 * i + 3])
         if l is None:

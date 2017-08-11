@@ -97,7 +97,7 @@ class PiecewisePolynomialTrajectory():
 
     @staticmethod
     def FromString(trajectorystring):
-        buff = StringIO.StringIO(trajectorystring)
+        buff = StringIO(trajectorystring)
         chunkslist = []
         while buff.pos < buff.len:
             duration = double(buff.readline())

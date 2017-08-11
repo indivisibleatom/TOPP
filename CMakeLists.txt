@@ -98,7 +98,7 @@ if( OpenRAVE_FOUND )
 endif()
 
 #find_package(Boost ${OpenRAVE_Boost_VERSION} EXACT COMPONENTS iostreams python thread filesystem system thread date_time)# regex)
-find_package(Boost COMPONENTS iostreams python thread filesystem system thread date_time)
+find_package(Boost COMPONENTS iostreams python3 thread filesystem system thread date_time)
 if( Boost_FOUND )
   include_directories(${Boost_INCLUDE_DIRS})
   set(TOPP_LINK_DIRS ${TOPP_LINK_DIRS} ${Boost_LIBRARY_DIRS})
