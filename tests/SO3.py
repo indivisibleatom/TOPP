@@ -3,14 +3,14 @@ from pylab import *
 import time
 import TOPP
 from TOPP import TOPPpy
-from TOPP import TOPPbindings
+import TOPPbindings
 from TOPP import Trajectory
 
 def Extractabc(abc):
     lista = [float(x) for x in abc[0].split()]
     listb = [float(x) for x in abc[1].split()]
     listc = [float(x) for x in abc[2].split()]
-    n= len(lista)/6
+    n= int(len(lista)/6)
     a = zeros((n,6))
     b = zeros((n,6))
     c = zeros((n,6))
@@ -53,9 +53,9 @@ ret = x.RunComputeProfiles(0,0)
     
 x.ReparameterizeTrajectory()
 t2 = time.time()
-print "Compute a,b,c:", t1-t0
-print "Run TOPP:", t2-t1
-print "Total:", t2-t0
+print ("Compute a,b,c:", t1-t0)
+print ("Run TOPP:", t2-t1)
+print ("Total:", t2-t0)
 
 # Display results
 ion()
@@ -72,4 +72,4 @@ dtplot = 0.01
 TOPPpy.PlotKinematics(traj,traj1,dtplot,vmax,accelmax)
 
 
-raw_input()
+input()

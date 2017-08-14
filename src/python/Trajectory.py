@@ -99,12 +99,19 @@ class PiecewisePolynomialTrajectory():
     def FromString(trajectorystring):
         buff = StringIO(trajectorystring)
         chunkslist = []
-        while buff.pos < buff.len:
-            duration = double(buff.readline())
+        print(trajectorystring)
+        while True:
+            read_line = buff.readline()
+            if not read_line:
+                print ("Breaking")
+                break
+            duration = double(read_line)
+            print("Duration", duration)
             dimension = int(buff.readline())
             poly_vector = []
             for i in range(dimension):
                 poly_vector.append(Polynomial.FromString(buff.readline()))
+            print("Appending")
             chunkslist.append(Chunk(duration, poly_vector))
         return PiecewisePolynomialTrajectory(chunkslist)
 

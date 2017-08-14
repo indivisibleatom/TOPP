@@ -146,8 +146,8 @@ def PlotProfiles(profileslist0, switchpointslist=[], figstart=None, colorscheme 
         M = 2 * max([max(p[3]) for p in profileslist])
     else:
         M = 20
-        bobrow = filter((lambda x: x < M), mvcbobrow[3])
-        direct = filter((lambda x: x < M), mvcdirect[3])
+        bobrow = list(filter((lambda x: x < M), mvcbobrow[3]))
+        direct = list(filter((lambda x: x < M), mvcdirect[3]))
         if len(bobrow) > 0:
             M = max(M, max(bobrow))
         if len(direct) > 0:
