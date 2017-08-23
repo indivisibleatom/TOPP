@@ -18,6 +18,7 @@
 
 from Utilities import vect2str, BezierToTrajectoryString
 import string
+import numpy as np
 from pylab import double, array, random
 from TOPPbindings import TOPPInstance
 
@@ -122,17 +123,17 @@ def ComputeKinematicConstraints(traj, amax, discrtimestep):
 
 ################# Compute MMR Constraints #####################
 
-def ComputeMaterialRemovalConstraints(traj, mrr_desired, volume, discrtimestep):
-    # Sample the dynamics constraints
+def ComputeMaterialRemovalConstraints(traj, amax, mrr_desired, volumes, discrtimestep):
+    # Sample the MMR constraints. Some linear interpolation for volume.
     ndiscrsteps = int((traj.duration + 1e-10) / discrtimestep) + 1
     constraintstring = ""
     for i in range(ndiscrsteps):
         t = i * discrtimestep
         qd = traj.Evald(t)
         qdd = traj.Evaldd(t)
-        constraintstring += "\n" + vect2str(+qd) + " " + vect2str(-qd)
-        constraintstring += "\n" + vect2str(+qdd) + " " + vect2str(-qdd)
-        constraintstring += "\n" + vect2str(-amax) + " " + vect2str(-amax)
+        constraintstring += "\n" + vect2str(+qd) + " " + vect2str(-qd) + " " + str(0)
+        constraintstring += "\n" + vect2str(+qdd) + " " + vect2str(-qdd) + " " + str(np.linalg.norm(qd)**2 * 0.01**2)
+        constraintstring += "\n" + vect2str(-amax) + " " + vect2str(-amax) + " "+ str(-(mrr_desired**2))
     return constraintstring
 
 
@@ -281,6 +282,33 @@ def PlotKinematics(traj0, traj1, dt=0.01, vmax=[], amax=[], figstart=0):
     xlabel('Time (s)', fontsize=18)
     ylabel('Joint accelerations (rad/s^2)', fontsize=18)
 
+def PlotMRR(traj, volumes, dt=0.01, mrr_desired=[], figstart=0):
+    from pylab import figure, clf, hold, gca, title, xlabel, ylabel, plot, axis, cycler
+    x = ['r', 'g', 'b', 'y', 'k']
+    colorcycle = cycler('color', x[0:traj.dimension])
+    Tmax = traj.duration
+
+    # Material removal rate
+    figure(figstart + 3)
+    clf()
+    hold('on')
+    ax = gca()
+    ax.set_prop_cycle(colorcycle)
+    tvect = np.arange(0, traj.duration + dt, dt)
+    qdvect = array([traj.Evald(t) for t in tvect])
+    plot(tvect, np.linalg.norm(qdvect, axis=1)**2 * (0.01**2), '', linewidth=2)
+    for mrr in mrr_desired:
+        plot([0, Tmax], [mrr*mrr, mrr*mrr], '-.')
+    for mrr in mrr_desired:
+        plot([0, Tmax], [0, 0], '-.')
+    #if len(mrr_desired) > 0:
+    #    Vmax = 1.2 * max(vmax)
+    #    if Vmax < 0.1:
+    #        Vmax = 10
+    #    axis([0, Tmax, -Vmax, Vmax])
+    title('Material removal rate', fontsize=20)
+    xlabel('Time (s)', fontsize=18)
+    ylabel('MRR', fontsize=18)
 
 def string2p(s):
     lines = [l.strip(" \n") for l in s.split('\n')]
