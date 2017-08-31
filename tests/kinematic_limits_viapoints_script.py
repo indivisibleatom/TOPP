@@ -43,8 +43,8 @@ trajectorystring = str(traj0)
 discrtimestep = float(sys.argv[5])
 
 ndiscrsteps = int((traj0.duration + 1e-10) / discrtimestep) + 1
-#volumes = np.random.rand(ndiscrsteps) / 0.6
-#volumes = np.ones(ndiscrsteps) * 0.6
+volumes = np.random.rand(ndiscrsteps) * 0.6
+volumes = np.ones(ndiscrsteps) * 0.6
 
 uselegacy = False
 TOPPbindings.passswitchpointnsteps = 100
@@ -69,7 +69,10 @@ x.ReparameterizeTrajectory(0.0005)
 ion()
 x.WriteProfilesList()
 x.WriteSwitchPointsList()
+
 x.WriteTSMap()
+svalues = np.fromstring(x.tsmapstring, sep='\n')
+
 profileslist = TOPPpy.ProfilesFromString(x.resprofilesliststring)
 switchpointslist = TOPPpy.SwitchPointsFromString(x.switchpointsliststring)
 TOPPpy.PlotProfiles(profileslist,switchpointslist,0)
@@ -77,9 +80,9 @@ TOPPpy.PlotProfiles(profileslist,switchpointslist,0)
 x.WriteResultTrajectory()
 traj1 = Trajectory.PiecewisePolynomialTrajectory.FromString(x.restrajectorystring)
 dtplot = 0.01
-TOPPpy.PlotTSMap(traj1,np.fromstring(x.tsmapstring, sep='\n') ,1)
+TOPPpy.PlotTSMap(traj1,svalues,1)
 TOPPpy.PlotKinematics(traj1,traj1,dtplot,vmax,amax,2)
-TOPPpy.PlotMRR(traj1,volumes,dtplot,[mrr_desired],5)
+TOPPpy.PlotMRR(traj1,volumes,svalues,dtplot,[mrr_desired],5)
 np.savetxt(sys.argv[6], np.asarray([traj0.duration, traj1.duration]))
 
 raw_input()

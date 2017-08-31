@@ -132,8 +132,7 @@ def ComputeMaterialRemovalConstraints(traj, amax, mrr_desired, volumes,
         t = i * discrtimestep
         qd = traj.Evald(t)
         qdd = traj.Evaldd(t)
-        volume = 0.1
-        #volumes.Eval(t)
+        volume = volumes[i]
         speed2 = np.linalg.norm(qd)**2
         constraintstring += "\n" + vect2str(+qd) + " " + vect2str(-qd) + " " + str(0)
         # MRR = Vol / Time = vol / (dist/speed) = Vol * speed / dist
@@ -300,7 +299,7 @@ def PlotKinematics(traj0, traj1, dt=0.01, vmax=[], amax=[], figstart=0):
     figure(figstart + 3)
     clf()
 
-def PlotMRR(traj, volumes, dt=0.01, mrr_desired=[], figstart=0):
+def PlotMRR(traj, volumes, svalues, dt=0.01, mrr_desired=[], figstart=0):
     from pylab import figure, clf, hold, gca, title, xlabel, ylabel, plot, axis, cycler
     x = ['r', 'g', 'b', 'y', 'k']
     colorcycle = cycler('color', x[0:traj.dimension])
@@ -312,9 +311,25 @@ def PlotMRR(traj, volumes, dt=0.01, mrr_desired=[], figstart=0):
     ax = gca()
     ax.set_prop_cycle(colorcycle)
     tvect = np.arange(0, traj.duration + dt, dt)
+
+    # Compute times for tsmap
+    times = []
+    current_time = 0
+    for chunk in traj.chunkslist:
+        times.append(current_time)
+        current_time = current_time + chunk.duration
+
+    time_contained_in_dt = np.asarray([np.logical_and(times >= tvect[index],
+                                                      times < tvect[index+1])
+                                            for index in np.arange(tvect.size-1)])
+    print time_contained_in_dt.shape, len(tvect)
+    sum_volumes_dt = np.zeros_like(tvect)
+    sum_volumes_dt[1:] = np.asarray([np.sum(volumes[time_contained_in_dt[index, :]]) for index in
+                                            np.arange(time_contained_in_dt.shape[0])])
+
     qdvect = array([traj.Evald(t) for t in tvect])
     plot(tvect, np.linalg.norm(qdvect, axis=1), '--', linewidth=2)
-    #plot(tvect, (np.linalg.norm(qdvect, axis=1) * volumes.Eval(t)), '', linewidth=2)
+    plot(tvect, (np.linalg.norm(qdvect, axis=1) * sum_volumes_dt), '', linewidth=2)
     for mrr in mrr_desired:
         plot([0, Tmax], [mrr, mrr], '-.')
     for mrr in mrr_desired:
