@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+
 # Copyright (C) 2016 Quang-Cuong Pham <cuong.pham@normalesup.org>
 #
 # This file is part of the Time-Optimal Path Parameterization (TOPP) library.
@@ -27,7 +27,12 @@ from TOPP import Utilities
 data = np.loadtxt(sys.argv[1]).transpose()
 path = data[1:4,:]
 volumes = data[4,:]
+volumes = np.ones_like(volumes) * 0.6
+voxel_length = 0.06
+volumes = volumes / voxel_length
+print path.shape
 traj0 = Utilities.InterpolateViapoints(path) # Interpolate using splines
+#volumes = Utilities.InterpolateVolumes(volumes, path) # Interpolate using splines
 
 # Constraints
 vmax = float(sys.argv[2])*ones(traj0.dimension)
@@ -37,7 +42,13 @@ mrr_desired = float(sys.argv[4])
 # Set up the TOPP instance
 trajectorystring = str(traj0)
 discrtimestep = float(sys.argv[5])
+
+ndiscrsteps = int((traj0.duration + 1e-10) / discrtimestep) + 1
+#volumes = np.random.rand(ndiscrsteps) / 0.6
+#volumes = np.ones(ndiscrsteps) * 0.6
+
 uselegacy = False
+TOPPbindings.passswitchpointnsteps = 100
 if uselegacy: #Using the legacy KinematicLimits (a bit faster but not fully supported)
     constraintstring = str(discrtimestep)
     constraintstring += "\n" + string.join([str(v) for v in vmax])
@@ -47,13 +58,13 @@ else: #Using the general QuadraticConstraints (fully supported)
     constraintstring = str(discrtimestep)
     constraintstring += "\n" + string.join([str(v) for v in vmax])
     #constraintstring += TOPPpy.ComputeKinematicConstraints(traj0, amax, discrtimestep)
-    constraintstring += TOPPpy.ComputeMaterialRemovalConstraints(traj0,
-                                                        amax, mrr_desired, volumes, discrtimestep)
+    constraintstring += TOPPpy.ComputeMaterialRemovalConstraints(traj0, amax, mrr_desired, volumes,
+                                                                 discrtimestep)
     x = TOPPbindings.TOPPInstance(None,"QuadraticConstraints",constraintstring,trajectorystring);
 
 # Run TOPP
 ret = x.RunComputeProfiles(0,0)
-x.ReparameterizeTrajectory()
+x.ReparameterizeTrajectory(0.0005)
 
 # Display results
 ion()
@@ -61,12 +72,13 @@ x.WriteProfilesList()
 x.WriteSwitchPointsList()
 profileslist = TOPPpy.ProfilesFromString(x.resprofilesliststring)
 switchpointslist = TOPPpy.SwitchPointsFromString(x.switchpointsliststring)
-#TOPPpy.PlotProfiles(profileslist,switchpointslist,4)
+TOPPpy.PlotProfiles(profileslist,switchpointslist,0)
+
 x.WriteResultTrajectory()
 traj1 = Trajectory.PiecewisePolynomialTrajectory.FromString(x.restrajectorystring)
-np.savetxt(sys.argv[6], np.asarray([traj0.duration, traj1.duration]))
 dtplot = 0.01
-TOPPpy.PlotKinematics(traj1,traj1,dtplot,vmax,amax)
-TOPPpy.PlotMRR(traj1,volumes,dtplot,[mrr_desired])
+TOPPpy.PlotKinematics(traj1,traj1,dtplot,vmax,amax,1)
+TOPPpy.PlotMRR(traj1,volumes,dtplot,[mrr_desired],4)
+np.savetxt(sys.argv[6], np.asarray([traj0.duration, traj1.duration]))
 
 raw_input()

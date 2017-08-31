@@ -123,7 +123,8 @@ def ComputeKinematicConstraints(traj, amax, discrtimestep):
 
 ################# Compute MMR Constraints #####################
 
-def ComputeMaterialRemovalConstraints(traj, amax, mrr_desired, volumes, discrtimestep):
+def ComputeMaterialRemovalConstraints(traj, amax, mrr_desired, volumes,
+                                       discrtimestep):
     # Sample the MMR constraints. Some linear interpolation for volume.
     ndiscrsteps = int((traj.duration + 1e-10) / discrtimestep) + 1
     constraintstring = ""
@@ -131,9 +132,13 @@ def ComputeMaterialRemovalConstraints(traj, amax, mrr_desired, volumes, discrtim
         t = i * discrtimestep
         qd = traj.Evald(t)
         qdd = traj.Evaldd(t)
+        volume = 0.1
+        #volumes.Eval(t)
+        speed2 = np.linalg.norm(qd)**2
         constraintstring += "\n" + vect2str(+qd) + " " + vect2str(-qd) + " " + str(0)
-        constraintstring += "\n" + vect2str(+qdd) + " " + vect2str(-qdd) + " " + str(np.linalg.norm(qd)**2 * 0.01**2)
-        constraintstring += "\n" + vect2str(-amax) + " " + vect2str(-amax) + " "+ str(-(mrr_desired**2))
+        # MRR = Vol / Time = vol / (dist/speed) = Vol * speed / dist
+        constraintstring += "\n" + vect2str(+qdd) + " " + vect2str(-qdd) + " " + str((speed2 * volume**2))
+        constraintstring += "\n" + vect2str(-amax) + " " + vect2str(-amax) + " " + str(-(mrr_desired**2))
     return constraintstring
 
 
@@ -154,6 +159,7 @@ def PlotProfiles(profileslist0, switchpointslist=[], figstart=None, colorscheme 
     else:
         plot(mvcbobrow[2], mvcbobrow[3], 'm', linewidth=4)        
         plot(mvcdirect[2], mvcdirect[3], 'm--', linewidth=4)
+        plot(mvcbobrow[2], volumes, 'm', linewidth=4)
     colorcycle = cycler('color', ['r', 'g', 'b', 'y', 'k'])
     ax = gca()
     ax.set_prop_cycle(colorcycle)
@@ -222,7 +228,7 @@ def PlotAlphaBeta(topp_inst, prec=30):
 
 
 def PlotKinematics(traj0, traj1, dt=0.01, vmax=[], amax=[], figstart=0):
-    from pylab import figure, clf, hold, gca, title, xlabel, ylabel, plot, axis, cycler
+    from pylab import figure, clf, hold, gca, title, xlabel, ylabel, plot, axis, cycler, show
     x = ['r', 'g', 'b', 'y', 'k']
     colorcycle = cycler('color', x[0:traj0.dimension])
     Tmax = max(traj0.duration, traj1.duration)
@@ -282,6 +288,9 @@ def PlotKinematics(traj0, traj1, dt=0.01, vmax=[], amax=[], figstart=0):
     xlabel('Time (s)', fontsize=18)
     ylabel('Joint accelerations (rad/s^2)', fontsize=18)
 
+    figure(figstart + 3)
+    clf()
+
 def PlotMRR(traj, volumes, dt=0.01, mrr_desired=[], figstart=0):
     from pylab import figure, clf, hold, gca, title, xlabel, ylabel, plot, axis, cycler
     x = ['r', 'g', 'b', 'y', 'k']
@@ -289,16 +298,17 @@ def PlotMRR(traj, volumes, dt=0.01, mrr_desired=[], figstart=0):
     Tmax = traj.duration
 
     # Material removal rate
-    figure(figstart + 3)
+    figure(figstart)
     clf()
     hold('on')
     ax = gca()
     ax.set_prop_cycle(colorcycle)
     tvect = np.arange(0, traj.duration + dt, dt)
     qdvect = array([traj.Evald(t) for t in tvect])
-    plot(tvect, np.linalg.norm(qdvect, axis=1)**2 * (0.01**2), '', linewidth=2)
+    plot(tvect, np.linalg.norm(qdvect, axis=1), '--', linewidth=2)
+    #plot(tvect, (np.linalg.norm(qdvect, axis=1) * volumes.Eval(t)), '', linewidth=2)
     for mrr in mrr_desired:
-        plot([0, Tmax], [mrr*mrr, mrr*mrr], '-.')
+        plot([0, Tmax], [mrr, mrr], '-.')
     for mrr in mrr_desired:
         plot([0, Tmax], [0, 0], '-.')
     #if len(mrr_desired) > 0:

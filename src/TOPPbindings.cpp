@@ -192,7 +192,6 @@ public:
         return ret;
     }
 
-
     int RunAVP(TOPP::dReal sdbeg1, TOPP::dReal sdbeg2){
         // Set tuning parameters
         pconstraints->integrationtimestep = integrationtimestep;

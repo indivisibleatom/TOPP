@@ -4,6 +4,7 @@ import Trajectory
 
 def InterpolateViapoints(path):
     nviapoints = len(path[0,:])
+    # This seems to be for numerical robustness.
     tv = linspace(0,1,nviapoints)
     for i in range(nviapoints-1):
         tv[i+1] = tv[i]+linalg.norm(path[:,i]-path[:,i+1])
@@ -24,7 +25,26 @@ def InterpolateViapoints(path):
             chunkslist.append(Trajectory.Chunk(t[i+1]-t[i],polylist))
     return Trajectory.PiecewisePolynomialTrajectory(chunkslist)
 
-
+def InterpolateVolumes(volumes, path):
+    nviapoints = len(path[0,:])
+    tv = linspace(0,1,nviapoints)
+    for i in range(nviapoints-1):
+        tv[i+1] = tv[i]+linalg.norm(path[:,i]-path[:,i+1])
+    tcklist = []
+    tcklist.append(interpolate.splrep(tv,volumes,s=0,k=1))
+    t = tcklist[0][0]
+    chunkslist = []
+    for i in range(len(t)-1):
+        polylist = []
+        if abs(t[i+1]-t[i])>1e-5:
+            for tck in tcklist:
+                a = 0
+                b = 0
+                c = interpolate.splev(t[i],tck,der=1)
+                d = interpolate.splev(t[i],tck,der=0)
+                polylist.append(Trajectory.Polynomial([d,c,b,a]))
+            chunkslist.append(Trajectory.Chunk(t[i+1]-t[i],polylist))
+    return Trajectory.PiecewisePolynomialTrajectory(chunkslist)
 
 def BezierToPolynomial(T, p0, p1, p2, p3):
     a = -p0 + 3 * p1 - 3 * p2 + p3
