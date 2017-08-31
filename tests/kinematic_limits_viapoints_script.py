@@ -30,7 +30,6 @@ volumes = data[4,:]
 volumes = np.ones_like(volumes) * 0.6
 voxel_length = 0.06
 volumes = volumes / voxel_length
-print path.shape
 traj0 = Utilities.InterpolateViapoints(path) # Interpolate using splines
 #volumes = Utilities.InterpolateVolumes(volumes, path) # Interpolate using splines
 
@@ -70,6 +69,7 @@ x.ReparameterizeTrajectory(0.0005)
 ion()
 x.WriteProfilesList()
 x.WriteSwitchPointsList()
+x.WriteTSMap()
 profileslist = TOPPpy.ProfilesFromString(x.resprofilesliststring)
 switchpointslist = TOPPpy.SwitchPointsFromString(x.switchpointsliststring)
 TOPPpy.PlotProfiles(profileslist,switchpointslist,0)
@@ -77,8 +77,9 @@ TOPPpy.PlotProfiles(profileslist,switchpointslist,0)
 x.WriteResultTrajectory()
 traj1 = Trajectory.PiecewisePolynomialTrajectory.FromString(x.restrajectorystring)
 dtplot = 0.01
-TOPPpy.PlotKinematics(traj1,traj1,dtplot,vmax,amax,1)
-TOPPpy.PlotMRR(traj1,volumes,dtplot,[mrr_desired],4)
+TOPPpy.PlotTSMap(traj1,np.fromstring(x.tsmapstring, sep='\n') ,1)
+TOPPpy.PlotKinematics(traj1,traj1,dtplot,vmax,amax,2)
+TOPPpy.PlotMRR(traj1,volumes,dtplot,[mrr_desired],5)
 np.savetxt(sys.argv[6], np.asarray([traj0.duration, traj1.duration]))
 
 raw_input()

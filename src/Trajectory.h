@@ -89,12 +89,15 @@ public:
     // Return the list of reparameterized chunks
     void SPieceToChunks(dReal s, dReal sd, dReal sdd, dReal T, int&
                         currentchunkindex, dReal& processedcursor,
-                        std::list<Chunk>::iterator& itcurrentchunk, std::list<Chunk>& chunkslist);
+                        std::list<Chunk>::iterator& itcurrentchunk, std::list<Chunk>& chunkslist,
+                        std::vector<dReal>& tsmap);
 
     // Reparameterize the trajectory
     // The degree of the polynomials of restrajectory will be 2*d where d is
     // the degree of the polynomials in the original trajectory
-    int Reparameterize(Constraints& constraints, Trajectory& restrajectory, dReal smax = 0);
+    // Also outputs the t -> s map at the discretization points.
+    int Reparameterize(Constraints& constraints, Trajectory& restrajectory, std::vector<dReal>& tsmap,
+    		           dReal smax = 0);
 
     // Write the trajectory to the stream
     void Write(std::stringstream& ss);

@@ -424,7 +424,8 @@ void Trajectory::ComputeChunk(dReal t0, dReal tnext, dReal s, dReal sd, dReal sd
 
 void Trajectory::SPieceToChunks(dReal s, dReal sd, dReal sdd, dReal T, int&
                                 currentchunkindex, dReal& processedcursor, std::list<Chunk>::iterator&
-                                itcurrentchunk, std::list<Chunk>& chunkslist) {
+                                itcurrentchunk, std::list<Chunk>& chunkslist,
+                                std::vector<dReal>& tsmap) {
     dReal t = 0, tnext;
     dReal snext = s + T*sd + 0.5*T*T*sdd;
     int chunkindex;
@@ -440,6 +441,7 @@ void Trajectory::SPieceToChunks(dReal s, dReal sd, dReal sdd, dReal T, int&
             BOOST_ASSERT(res);
             ComputeChunk(t,tnext,s-itcurrentchunk->sbegin,sd,sdd,*itcurrentchunk,newchunk);
             chunkslist.push_back(newchunk);
+            tsmap.push_back(s);
             t = tnext;
         }
         currentchunkindex++;
@@ -452,11 +454,13 @@ void Trajectory::SPieceToChunks(dReal s, dReal sd, dReal sdd, dReal T, int&
     BOOST_ASSERT(res);
     ComputeChunk(t,tnext,s-itcurrentchunk->sbegin,sd,sdd,*itcurrentchunk,newchunk);
     chunkslist.push_back(newchunk);
+    tsmap.push_back(s);
     processedcursor = remainder;
 }
 
 
-int Trajectory::Reparameterize(Constraints& constraints, Trajectory& restrajectory, dReal smax) {
+int Trajectory::Reparameterize(Constraints& constraints, Trajectory& restrajectory,
+		                       std::vector<dReal>& tsmap, dReal smax) {
 
     if (constraints.resprofileslist.size() < 1) {
         return -1;
@@ -508,7 +512,7 @@ int Trajectory::Reparameterize(Constraints& constraints, Trajectory& restrajecto
                 sdd = (sdnext2-sdcur)/dtmod;
             }
             SPieceToChunks(scur, sdcur, sdd, dtmod, currentchunkindex,
-                           processedcursor, itcurrentchunk, newchunkslist);
+                           processedcursor, itcurrentchunk, newchunkslist, tsmap);
         }
         else
             break;

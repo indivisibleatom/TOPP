@@ -150,16 +150,14 @@ def PlotProfiles(profileslist0, switchpointslist=[], figstart=None, colorscheme 
     if figstart is not None:
         figure(figstart)
         clf()
-    hold('on')
     mvcbobrow = profileslist.pop(0)
     mvcdirect = profileslist.pop(0)
     if colorscheme == 1:
         plot(mvcbobrow[2], mvcbobrow[3], 'c', linewidth=4)
         plot(mvcdirect[2], mvcdirect[3], 'c--', linewidth=4)
     else:
-        plot(mvcbobrow[2], mvcbobrow[3], 'm', linewidth=4)        
+        plot(mvcbobrow[2], mvcbobrow[3], 'm', linewidth=4)
         plot(mvcdirect[2], mvcdirect[3], 'm--', linewidth=4)
-        plot(mvcbobrow[2], volumes, 'm', linewidth=4)
     colorcycle = cycler('color', ['r', 'g', 'b', 'y', 'k'])
     ax = gca()
     ax.set_prop_cycle(colorcycle)
@@ -192,6 +190,20 @@ def PlotProfiles(profileslist0, switchpointslist=[], figstart=None, colorscheme 
         ylabel('$\dot s$', fontsize=22)
     return smax, sdmax  # return this for PlotPhase (yurk!)
 
+
+def PlotTSMap(traj, svalues, figstart=1):
+    from pylab import figure, clf, hold, plot, gca, axis, title, xlabel, ylabel, cycler
+    figure(figstart)
+    clf()
+    times = []
+    current_time = 0
+    for chunk in traj.chunkslist:
+        times.append(current_time)
+        current_time = current_time + chunk.duration
+    plot(times, svalues)
+    title("Variation of s with time")
+    xlabel("$t$")
+    ylabel("$s$")
 
 def PlotComputedProfiles(topp_bind, figstart=1):
     topp_bind.WriteProfilesList()
@@ -236,7 +248,6 @@ def PlotKinematics(traj0, traj1, dt=0.01, vmax=[], amax=[], figstart=0):
     # Joint angles
     figure(figstart)
     clf()
-    hold('on')
     ax = gca()
     ax.set_prop_cycle(colorcycle)
     traj0.Plot(dt, '--')
@@ -249,7 +260,6 @@ def PlotKinematics(traj0, traj1, dt=0.01, vmax=[], amax=[], figstart=0):
     # Velocity
     figure(figstart + 1)
     clf()
-    hold('on')
     ax = gca()
     ax.set_prop_cycle(colorcycle)
     traj0.Plotd(dt, '--')
@@ -273,7 +283,6 @@ def PlotKinematics(traj0, traj1, dt=0.01, vmax=[], amax=[], figstart=0):
     clf()
     ax = gca()
     ax.set_prop_cycle(colorcycle)
-    hold('on')
     traj0.Plotdd(dt, '--')
     ax.set_prop_cycle(colorcycle)
     traj1.Plotdd(dt)
@@ -300,7 +309,6 @@ def PlotMRR(traj, volumes, dt=0.01, mrr_desired=[], figstart=0):
     # Material removal rate
     figure(figstart)
     clf()
-    hold('on')
     ax = gca()
     ax.set_prop_cycle(colorcycle)
     tvect = np.arange(0, traj.duration + dt, dt)

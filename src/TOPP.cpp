@@ -2355,7 +2355,8 @@ dReal EmergencyStop(Constraints& constraints, dReal sdbeg, Trajectory& restrajec
     if(returntype == INT_BOTTOM) {
         constraints.resprofileslist.resize(0);
         constraints.resprofileslist.push_back(Profile(slist,sdlist,sddlist,dt,true));
-        int ret = constraints.trajectory.Reparameterize(constraints, restrajectory, sprev);
+        std::vector<TOPP::dReal> tsmap;
+        int ret = constraints.trajectory.Reparameterize(constraints, restrajectory, tsmap, sprev);
         if(ret > 0) {
             return sprev;
         }
