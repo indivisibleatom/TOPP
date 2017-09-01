@@ -136,12 +136,14 @@ public:
 
     boost::shared_ptr<Constraints> pconstraints;
     TOPP::Trajectory restrajectory;
+    std::vector<TOPP::dReal> tsmap;
 
     std::string outconstraintstring;
     std::string restrajectorystring;
     std::string resextrastring;
     std::string resprofilesliststring;
     std::string switchpointsliststring;
+    std::string tsmapstring;
     int ntangenttreated;
     int nsingulartreated;
     TOPP::dReal resduration;
@@ -188,7 +190,7 @@ public:
         // Set tuning parameters
         pconstraints->reparamtimestep = reparamtimestep;
 
-        int ret = pconstraints->trajectory.Reparameterize(*pconstraints, restrajectory);
+        int ret = pconstraints->trajectory.Reparameterize(*pconstraints, restrajectory, tsmap);
         return ret;
     }
 
@@ -278,6 +280,20 @@ public:
         resprofilesliststring = ss.str();
     }
 
+    // Write mapping from time to s values.
+    void WriteTSMap() {
+        std::stringstream ss;
+        ss << std::setprecision(17);
+
+        std::vector<TOPP::dReal>::iterator iter = tsmap.begin();
+        while(iter!=tsmap.end()) {
+        	ss << *iter;
+            ss << "\n";
+            ++iter;
+        }
+        tsmapstring = ss.str();
+    }
+
     std::string SerializeInputTrajectory() {
         //std::stringstream ss; ss << std::setprecision(std::numeric_limits<OpenRAVE::dReal>::digits10+1);
         std::stringstream ss;
@@ -353,6 +369,7 @@ BOOST_PYTHON_MODULE(TOPPbindings) {
     .def_readonly("sdendmin", &TOPPInstance::sdendmin)
     .def_readonly("sdendmax", &TOPPInstance::sdendmax)
     .def_readonly("pconstraints", &TOPPInstance::pconstraints)
+    .def_readonly("tsmapstring", &TOPPInstance::tsmapstring)
     .def("GetAlpha",&TOPPInstance::GetAlpha)
     .def("GetBeta",&TOPPInstance::GetBeta)
     .def("RunComputeProfiles",&TOPPInstance::RunComputeProfiles)
@@ -360,7 +377,9 @@ BOOST_PYTHON_MODULE(TOPPbindings) {
     .def("RunAVP",&TOPPInstance::RunAVP)
     .def("RunAVPBackward",&TOPPInstance::RunAVPBackward)
     .def("WriteResultTrajectory",&TOPPInstance::WriteResultTrajectory)
+    .def("WriteResultTrajectory",&TOPPInstance::WriteResultTrajectory)
     .def("WriteProfilesList",&TOPPInstance::WriteProfilesList)
+    .def("WriteTSMap", &TOPPInstance::WriteTSMap)
     .def("WriteExtra",&TOPPInstance::WriteExtra)
     .def("WriteConstraints",&TOPPInstance::WriteConstraints)
     .def("WriteSwitchPointsList",&TOPPInstance::WriteSwitchPointsList)
