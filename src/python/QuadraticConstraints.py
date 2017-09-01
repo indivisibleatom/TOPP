@@ -20,7 +20,7 @@ from . import TOPPpy
 
 from .Errors import NoTrajectoryFound, TOPP_OK
 from .Trajectory import PiecewisePolynomialTrajectory
-from TOPPbindings import TOPPInstance
+from .TOPPbindings import TOPPInstance
 from .TOPPpy import ProfilesFromString, SwitchPointsFromString, PlotProfiles
 
 

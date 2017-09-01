@@ -1,3 +1,3 @@
-from .Errors import *
-from .QuadraticConstraints import *
-from .Trajectory import *
+from . import Errors
+from . import QuadraticConstraints
+from . import Trajectory

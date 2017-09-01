@@ -19,10 +19,10 @@ import openravepy
 import string
 import time
 
-import Trajectory
+from . import Trajectory
 import TOPPbindings
 
-from QuadraticConstraints import QuadraticConstraints
+from .QuadraticConstraints import QuadraticConstraints
 from pylab import arange, array, cross, dot, inv, norm, random, zeros
 from pylab import arcsin, arctan2, cos, pi, sin
 
@@ -52,7 +52,7 @@ class RAVEBindings(QuadraticConstraints):
 def ToRaveTraj(robot, spec, traj):
     nchunks = len(traj.chunkslist)
     if nchunks < 1:
-        print "TOPP trajectory has less than 1 chunk"
+        print("TOPP trajectory has less than 1 chunk")
         return None
     timespec = openravepy.ConfigurationSpecification()
     timespec.AddGroup('deltatime', 1, 'linear')
@@ -74,7 +74,7 @@ def ToRaveTraj(robot, spec, traj):
 def FromRaveTraj(robot, traj):
     N = traj.GetNumWaypoints()
     if N < 2:
-        print "RAVE trajectory has less than 2 waypoints"
+        print("RAVE trajectory has less than 2 waypoints")
         return None
     timespec = openravepy.ConfigurationSpecification()
     timespec.AddGroup('deltatime', 1, 'linear')

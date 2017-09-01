@@ -13,7 +13,7 @@
 # limitations under the License.
 cmake_minimum_required (VERSION 2.8.0)
 project(topp)
-set(CMAKE_ALLOW_LOOSE_LOOP_CONSTRUCTS TRUE)
+set( CMAKE_ALLOW_LOOSE_LOOP_CONSTRUCTS TRUE )
 
 set (TOPP_VERSION_MAJOR 0)
 set (TOPP_VERSION_MINOR 1)
@@ -61,24 +61,12 @@ set(TOPP_INCLUDE_LOCAL_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/src)
 include_directories(${CMAKE_CURRENT_BINARY_DIR}/include)
 include_directories(${TOPP_INCLUDE_LOCAL_DIRS})
 
-if( NOT $ENV{BOOST_INCLUDEDIR} STREQUAL "" )
-  set(Boost_INCLUDE_DIR $ENV{BOOST_INCLUDEDIR})
-endif()
-if( NOT $ENV{BOOST_LIBRARYDIR} STREQUAL "" )
-  set(Boost_LIBRARY_DIRS $ENV{BOOST_LIBRARYDIR})
-endif()
-set(Boost_ADDITIONAL_VERSIONS "1.49" "1.48" "1.47" "1.46.1" "1.45" "1.44" "1.43" "1.42" "1.41" "1.40" "1.39" "1.38" "1.37.0" "1.37" "1.35.0" "1.34.1" "1.34.0" "1.34" "1.33.1" "1.33.0" "1.33" ${Boost_ADDITIONAL_VERSIONS})
-#find_package(Boost COMPONENTS filesystem system thread date_time)
-
-set(EXTRA_LIBRARIES ${Boost_FILESYSTEM_LIBRARY} ${Boost_SYSTEM_LIBRARY})
-set(TOPP_LINK_DIRS)
-
 if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX OR COMPILER_IS_CLANG )
   set(CMAKE_CXX_FLAGS_OPTIMIZED "-O3 -DNDEBUG -DBOOST_DISABLE_ASSERTS -D_SECURE_SCL=0") # this practically removes all checks making it a very dangerous options to play with
   set(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG")
   set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g")
   set(CMAKE_CXX_FLAGS_DEBUG "-g -D_DEBUG")
-  
+
   add_definitions(-fPIC) # this is a very important switch and some libraries seem now to have it....
   # for some reason c++-0x is required...
   set(EXTRA_COMPILE_FLAGS "-fPIC -std=c++0x")
@@ -90,7 +78,6 @@ if( CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX )
   add_definitions("-fno-strict-aliasing -Wall")
 endif( CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX )
 
-#configure_file(${CMAKE_CURRENT_SOURCE_DIR}/config.h.in ${CMAKE_CURRENT_BINARY_DIR}/include/topp/config.h IMMEDIATE @ONLY)
 
 find_package(OpenRAVE)
 if( OpenRAVE_FOUND )
@@ -112,19 +99,6 @@ message(STATUS "found boost version: ${Boost_VERSION} at ${Boost_INCLUDE_DIRS}")
 if( NOT Boost_THREAD_LIBRARY OR NOT Boost_DATE_TIME_LIBRARY )
   message(FATAL_ERROR "boost thread and date_time libraries are necessary")
 endif()
-
-
-find_package(PythonInterp 3.0 REQUIRED)
-find_package(PythonLibs 3.0 REQUIRED)
-
-if( NOT PYTHON_INCLUDE_DIRS )
-  set(PYTHON_INCLUDE_DIRS ${PYTHON_INCLUDE_PATH})
-endif()
-
-set(TOPP_PYTHON_INSTALL_DIR ${CMAKE_BINARY_DIR}/lib)
-set(TOPPPY_INSTALL_DIR "${TOPP_PYTHON_INSTALL_DIR}/TOPP" CACHE PATH "TOPP Python bindings installation directory")
-
-find_package(PkgConfig) # pkg_check_modules
 
 check_library_exists(lapack cgesdd_ "" LAPACK_FOUND)
 if( LAPACK_FOUND )

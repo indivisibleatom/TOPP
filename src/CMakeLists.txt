@@ -12,35 +12,29 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Copy the python module
-include(PythonModule)
-add_python_module(python TOPP)
+# copy the python files
 
 # include python bindings sample
-if( Boost_PYTHON3_FOUND AND Boost_THREAD_FOUND )
-  if( PYTHONLIBS_FOUND OR PYTHON_LIBRARIES )
-    if( OpenRAVE_FOUND )
-      include_directories(${PYTHON_INCLUDE_PATH} ${OpenRAVE_INCLUDE_DIRS} ${Boost_INCLUDE_DIRS})
-      link_directories(${OpenRAVE_LIBRARY_DIRS} ${Boost_LIBRARY_DIRS})
-    else()
-      include_directories(${PYTHON_INCLUDE_PATH} ${Boost_INCLUDE_DIRS})
-      link_directories(${Boost_LIBRARY_DIRS})
-    endif()
-    file(GLOB topp_files ${CMAKE_CURRENT_SOURCE_DIR}/*.h ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp)
+if( OpenRAVE_FOUND )
+  include_directories(${PYTHON_INCLUDE_PATH} ${OpenRAVE_INCLUDE_DIRS} ${Boost_INCLUDE_DIRS})
+  link_directories(${OpenRAVE_LIBRARY_DIRS} ${Boost_LIBRARY_DIRS})
+else()
+  include_directories(${PYTHON_INCLUDE_PATH} ${Boost_INCLUDE_DIRS})
+  link_directories(${Boost_LIBRARY_DIRS})
+endif()
+file(GLOB topp_files ${CMAKE_CURRENT_SOURCE_DIR}/*.h ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp)
 
-    add_library(TOPPbindings SHARED ${topp_files})
-    if( OpenRAVE_FOUND )
-      target_link_libraries(TOPPbindings ${OpenRAVE_PYTHON_DIR}/openravepy_int.so ${PYTHON_LIBRARIES} ${Boost_PYTHON_LIBRARY} ${Boost_THREAD_LIBRARY} ${OpenRAVE_LIBRARIES} ${LAPACK_LIBRARIES})
-      set_target_properties(TOPPbindings PROPERTIES PREFIX "" COMPILE_FLAGS "${EXTRA_COMPILE_FLAGS} ${OpenRAVE_CXX_FLAGS}" LINK_FLAGS "${OpenRAVE_LINK_FLAGS}")
-    else()
-      target_link_libraries(TOPPbindings ${PYTHON_LIBRARIES} ${Boost_PYTHON3_LIBRARY} ${Boost_THREAD_LIBRARY} ${LAPACK_LIBRARIES})
-      set_target_properties(TOPPbindings PROPERTIES PREFIX "" COMPILE_FLAGS "${EXTRA_COMPILE_FLAGS} " LINK_FLAGS "")
-    endif()
-    #install(TARGETS TOPPbindings DESTINATION ${TOPPPY_INSTALL_DIR} COMPONENT ${COMPONENT_PREFIX}python)
-  endif()
+add_library(TOPPbindings SHARED ${topp_files})
+add_python_module(python TOPP)
+
+# Output bindings to python module dir
+set_target_properties(TOPPbindings PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib/python/TOPP)
+
+if( OpenRAVE_FOUND )
+  target_link_libraries(TOPPbindings ${OpenRAVE_PYTHON_DIR}/openravepy_int.so ${PYTHON_LIBS} ${Boost_THREAD_LIBRARY} ${OpenRAVE_LIBRARIES} ${LAPACK_LIBRARIES})
+  set_target_properties(TOPPbindings PROPERTIES PREFIX "" COMPILE_FLAGS "${EXTRA_COMPILE_FLAGS} ${OpenRAVE_CXX_FLAGS}" LINK_FLAGS "${OpenRAVE_LINK_FLAGS}")
+else()
+  target_link_libraries(TOPPbindings ${PYTHON_LIBS} ${Boost_THREAD_LIBRARY} ${LAPACK_LIBRARIES})
+  set_target_properties(TOPPbindings PROPERTIES PREFIX "" COMPILE_FLAGS "${EXTRA_COMPILE_FLAGS} " LINK_FLAGS "")
 endif()
 
-#file(GLOB topp_python_files "${CMAKE_CURRENT_SOURCE_DIR}/python/*.py")
-#install(FILES ${topp_python_files} DESTINATION ${TOPPPY_INSTALL_DIR} COMPONENT ${COMPONENT_PREFIX}python)
-
-#install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/python/" DESTINATION ${TOPPPY_INSTALL_DIR} FILE_PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ GROUP_EXECUTE GROUP_READ WORLD_EXECUTE WORLD_READ COMPONENT ${COMPONENT_PREFIX}python PATTERN ".svn" EXCLUDE PATTERN ".pyc" EXCLUDE)

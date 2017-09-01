@@ -1,7 +1,7 @@
 from numpy import *
 import bisect
 import pylab, scipy
-from io import StringIO
+import io
 
 
 from pylab import arange, array, double, plot, zeros
@@ -41,6 +41,27 @@ class Polynomial(object):
     def __str__(self):
         return ' '.join(map(str, self.coeff_list))
 
+class PChipTrajectory():
+    def __init__(self, pchip, duration):
+        self.pchip = pchip
+        self.derivative = pchip.derivative()
+        self.duration = duration
+
+    def Plot(self, dt, f=''):
+        tvect = arange(0, self.duration + dt, dt)
+        qvect = array([self.pchip(t) for t in tvect])
+        plot(tvect, qvect, f, linewidth=2)
+
+    def Plotd(self, dt, f=''):
+        tvect = arange(0, self.duration + dt, dt)
+        qdvect = array([self.derivative(t) for t in tvect])
+        plot(tvect, qdvect, f, linewidth=2)
+
+    def Eval(self, t):
+        return self.pchip(t)
+
+    def Evald(self, t):
+        return self.derivative(t)
 
 class Chunk():
     def __init__(self, duration, poly_list):
@@ -97,21 +118,17 @@ class PiecewisePolynomialTrajectory():
 
     @staticmethod
     def FromString(trajectorystring):
-        buff = StringIO(trajectorystring)
+        buff = io.StringIO(trajectorystring)
         chunkslist = []
-        print(trajectorystring)
         while True:
             read_line = buff.readline()
-            if not read_line:
-                print ("Breaking")
+            if read_line == '':
                 break
             duration = double(read_line)
-            print("Duration", duration)
             dimension = int(buff.readline())
             poly_vector = []
             for i in range(dimension):
                 poly_vector.append(Polynomial.FromString(buff.readline()))
-            print("Appending")
             chunkslist.append(Chunk(duration, poly_vector))
         return PiecewisePolynomialTrajectory(chunkslist)
 
@@ -168,7 +185,6 @@ def CropChunk(c, s0, s1):
             Pin = polyder(Pin)
         polynomialsvector.append(Polynomial(coeffs))
     return Chunk(s1-s0, polynomialsvector)
-            
 
 # Assumes that i0 < i1
 def InsertIntoTrajectory(traj,traj2,s0,s1):
@@ -180,20 +196,16 @@ def InsertIntoTrajectory(traj,traj2,s0,s1):
     chunk1 = CropChunk(c1, r1, c1.duration) 
     tolerance = 0.05
     if linalg.linalg.norm(traj2.Eval(0)-c0.Eval(r0))>=tolerance :
-        print ("Position mismatch at s0 : ",
-               linalg.linalg.norm(traj2.Eval(0)-c0.Eval(r0)))
+        print(("Position mismatch at s0 : ", linalg.linalg.norm(traj2.Eval(0)-c0.Eval(r0))))
         return None
     if linalg.linalg.norm(traj2.Eval(traj2.duration)-c1.Eval(r1))>=tolerance:
-        print ("Position mismatch at s1 : ",
-               linalg.linalg.norm(traj2.Eval(traj2.duration)-c1.Eval(r1)))
+        print(("Position mismatch at s1 : ", linalg.linalg.norm(traj2.Eval(traj2.duration)-c1.Eval(r1))))
         return None
     if linalg.linalg.norm(traj2.Evald(0)-c0.Evald(r0)) >= tolerance:
-        print ("Velocity mismatch at s0 : ",
-               linalg.linalg.norm(traj2.Evald(0)-c0.Evald(r0)))
+        print(("Velocity mismatch at s0 : ", linalg.linalg.norm(traj2.Evald(0)-c0.Evald(r0))))
         return None
     if linalg.linalg.norm(traj2.Evald(traj2.duration)-c1.Evald(r1)) >= tolerance:
-        print ("Velocity mismatch at s1: ",
-               linalg.linalg.norm(traj2.Evald(traj2.duration)-c1.Evald(r1)))
+        print(("Velocity mismatch at s1: ", linalg.linalg.norm(traj2.Evald(traj2.duration)-c1.Evald(r1))))
         return None
     newchunkslist = list(traj.chunkslist)
     for i in range(i1-i0+1):
@@ -230,3 +242,35 @@ def SubTraj(traj,s0,s1=-1):
             i = i+1
         newchunkslist.append(CropChunk(c1, 0, r1))
     return PiecewisePolynomialTrajectory(newchunkslist)
+
+def ReverseTrajectory(topptraj):
+    newchunkslist = []
+
+    for chunk in topptraj.chunkslist:
+        T = chunk.duration
+        newpoly_list = []
+        for p in chunk.polynomialsvector:
+            # Perform variable changing of p(x) = a_n(x)^n + a_(n-1)(x)^(n-1) + ...
+            # by x = T - y
+            a = p.q # coefficient vector with python convention (highest degree first)
+            # a is a poly1d object
+            r = a.r
+            newr = [T - k for k in r]
+            b = poly1d(newr, True) # reconstruct a new polynomial from roots
+            b = b*a.coeffs[0] # multiply back by a_n
+            # *** this multiplication does not commute
+            if (b(0)*a(T) < 0):
+                # correct the coeffs if somehow the polynomial is flipped
+                b = b*-1.0
+            # TOPP convention is weak-term-first
+            newpoly = Polynomial(b.coeffs.tolist()[::-1])
+            newpoly_list.append(newpoly)
+        newchunk = Chunk(chunk.duration, newpoly_list)
+        newchunkslist.insert(0, newchunk)
+    newtopptraj = PiecewisePolynomialTrajectory(newchunkslist)
+    return newtopptraj
+
+def ReverseTrajectoryString(topptrajstring):
+    topptraj = PiecewisePolynomialTrajectory.FromString(topptrajstring)
+    newtopptraj = ReverseTrajectory(topptraj)
+    return str(newtopptraj)

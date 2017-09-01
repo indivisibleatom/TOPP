@@ -18,8 +18,9 @@
 
 from .Utilities import vect2str, BezierToTrajectoryString
 import string
+import numpy as np
 from pylab import double, array, random
-from TOPPbindings import TOPPInstance
+from .TOPPbindings import TOPPInstance
 
 ################# Reading from string #####################
 
@@ -120,6 +121,26 @@ def ComputeKinematicConstraints(traj, amax, discrtimestep):
     return constraintstring
 
 
+################# Compute MMR Constraints #####################
+
+def ComputeMaterialRemovalConstraints(traj, amax, mrr_desired, volume_rate,
+                                      discrtimestep):
+    # Sample the MMR constraints. Some linear interpolation for volume.
+    ndiscrsteps = int((traj.duration + 1e-10) / discrtimestep) + 1
+    constraintstring = ""
+    for i in range(ndiscrsteps):
+        t = i * discrtimestep
+        qd = traj.Evald(t)
+        qdd = traj.Evaldd(t)
+        volume = volume_rate.Eval(t)
+        speed2 = np.linalg.norm(qd)**2
+        constraintstring += "\n" + vect2str(+qd) + " " + vect2str(-qd) + " " + str(0)
+        # MRR = Vol / Time = vol / (dist/speed) = Vol * speed / dist
+        constraintstring += "\n" + vect2str(+qdd) + " " + vect2str(-qdd) + " " + str(volume**2)
+        constraintstring += "\n" + vect2str(-amax) + " " + vect2str(-amax) + " " + str(-(mrr_desired**2))
+    return constraintstring
+
+
 ######################## Plots ############################
 
 def PlotProfiles(profileslist0, switchpointslist=[], figstart=None, colorscheme = 1):
@@ -128,14 +149,13 @@ def PlotProfiles(profileslist0, switchpointslist=[], figstart=None, colorscheme 
     if figstart is not None:
         figure(figstart)
         clf()
-    hold('on')
     mvcbobrow = profileslist.pop(0)
     mvcdirect = profileslist.pop(0)
     if colorscheme == 1:
         plot(mvcbobrow[2], mvcbobrow[3], 'c', linewidth=4)
         plot(mvcdirect[2], mvcdirect[3], 'c--', linewidth=4)
     else:
-        plot(mvcbobrow[2], mvcbobrow[3], 'm', linewidth=4)        
+        plot(mvcbobrow[2], mvcbobrow[3], 'm', linewidth=4)
         plot(mvcdirect[2], mvcdirect[3], 'm--', linewidth=4)
     colorcycle = cycler('color', ['r', 'g', 'b', 'y', 'k'])
     ax = gca()
@@ -169,6 +189,20 @@ def PlotProfiles(profileslist0, switchpointslist=[], figstart=None, colorscheme 
         ylabel('$\dot s$', fontsize=22)
     return smax, sdmax  # return this for PlotPhase (yurk!)
 
+
+def PlotTSMap(traj, svalues, figstart=1):
+    from pylab import figure, clf, hold, plot, gca, axis, title, xlabel, ylabel, cycler
+    figure(figstart)
+    clf()
+    times = []
+    current_time = 0
+    for chunk in traj.chunkslist:
+        times.append(current_time)
+        current_time = current_time + chunk.duration
+    plot(times, svalues)
+    title("Variation of s with time")
+    xlabel("$t$")
+    ylabel("$s$")
 
 def PlotComputedProfiles(topp_bind, figstart=1):
     topp_bind.WriteProfilesList()
@@ -205,7 +239,7 @@ def PlotAlphaBeta(topp_inst, prec=30):
 
 
 def PlotKinematics(traj0, traj1, dt=0.01, vmax=[], amax=[], figstart=0):
-    from pylab import figure, clf, hold, gca, title, xlabel, ylabel, plot, axis, cycler
+    from pylab import figure, clf, hold, gca, title, xlabel, ylabel, plot, axis, cycler, show
     x = ['r', 'g', 'b', 'y', 'k']
     colorcycle = cycler('color', x[0:traj0.dimension])
     Tmax = max(traj0.duration, traj1.duration)
@@ -213,7 +247,6 @@ def PlotKinematics(traj0, traj1, dt=0.01, vmax=[], amax=[], figstart=0):
     # Joint angles
     figure(figstart)
     clf()
-    hold('on')
     ax = gca()
     ax.set_prop_cycle(colorcycle)
     traj0.Plot(dt, '--')
@@ -226,7 +259,6 @@ def PlotKinematics(traj0, traj1, dt=0.01, vmax=[], amax=[], figstart=0):
     # Velocity
     figure(figstart + 1)
     clf()
-    hold('on')
     ax = gca()
     ax.set_prop_cycle(colorcycle)
     traj0.Plotd(dt, '--')
@@ -250,7 +282,6 @@ def PlotKinematics(traj0, traj1, dt=0.01, vmax=[], amax=[], figstart=0):
     clf()
     ax = gca()
     ax.set_prop_cycle(colorcycle)
-    hold('on')
     traj0.Plotdd(dt, '--')
     ax.set_prop_cycle(colorcycle)
     traj1.Plotdd(dt)
@@ -265,6 +296,67 @@ def PlotKinematics(traj0, traj1, dt=0.01, vmax=[], amax=[], figstart=0):
     xlabel('Time (s)', fontsize=18)
     ylabel('Joint accelerations (rad/s^2)', fontsize=18)
 
+    figure(figstart + 3)
+    clf()
+
+def PlotMRR(traj, volume_rates, svalues, dt=0.01, mrr_desired=[], figstart=0):
+    from pylab import figure, clf, hold, gca, title, xlabel, ylabel, plot, axis, cycler
+    x = ['r', 'g', 'b', 'y', 'k']
+    colorcycle = cycler('color', x[0:traj.dimension])
+    Tmax = traj.duration
+
+    # Material removal rate
+    figure(figstart)
+    clf()
+    ax = gca()
+    ax.set_prop_cycle(colorcycle)
+    tvect = np.arange(0, traj.duration + dt, dt)
+
+    # Compute times for tsmap
+    times = []
+    current_time = 0
+    for chunk in traj.chunkslist:
+        times.append(current_time)
+        current_time = current_time + chunk.duration
+
+    # Compute for each time, if it is contained in interval [tcur, tcur+dt] for
+    # tvect[0:-1]
+    time_contained_in_dt = np.asarray([np.logical_and(times >= tvect[index],
+                                                      times < tvect[index+1])
+                                       for index in np.arange(tvect.size-1)])
+    # For each interval of tvect[0:-1], compute s values that are traversed in
+    # interval. Correspond these s-values to the beginning of the interval
+    s_for_dts = [svalues[time_contained_in_dt[index, :]] for index in np.arange(time_contained_in_dt.shape[0])]
+    # Use the s values to compute the ds values for each interval
+    ds_for_dts_firsts = [0] + [s_for_dt[0]-s_for_dt_last[-1] for s_for_dt, s_for_dt_last in
+                         zip(s_for_dts[1:], s_for_dts[:-1])]
+    ds_for_dts_others = [tuple(s_for_dt[1:]-s_for_dt[:-1]) for s_for_dt in s_for_dts]
+    ds_for_dts = [np.asarray((ds_for_dt_first,) + ds_for_dt_others) for
+                  ds_for_dt_first, ds_for_dt_others in zip(ds_for_dts_firsts,
+                                                           ds_for_dts_others)]
+
+    volumes_dt = np.zeros_like(tvect)
+    volumes_dt[1:] = [np.sum(np.asarray([volume_rates.Eval(s_for_dt[index]) *
+                           ds_for_dt[index] for index in
+                           np.arange(s_for_dt.size)])) for s_for_dt,
+                           ds_for_dt in zip(s_for_dts, ds_for_dts)]
+
+    qdvect = array([traj.Evald(t) for t in tvect])
+    plot(tvect, np.linalg.norm(qdvect, axis=1), 'r--', linewidth=2)
+    plot(tvect, volumes_dt, 'b--', linewidth=2)
+    plot(tvect, (volumes_dt/dt), 'g', linewidth=2)
+    for mrr in mrr_desired:
+        plot([0, Tmax], [mrr, mrr], 'g-.')
+    for mrr in mrr_desired:
+        plot([0, Tmax], [0, 0], 'g-.')
+    #if len(mrr_desired) > 0:
+    #    Vmax = 1.2 * max(vmax)
+    #    if Vmax < 0.1:
+    #        Vmax = 10
+    #    axis([0, Tmax, -Vmax, Vmax])
+    title('Material removal rate', fontsize=20)
+    xlabel('Time (s)', fontsize=18)
+    ylabel('MRR', fontsize=18)
 
 def string2p(s):
     lines = [l.strip(" \n") for l in s.split('\n')]
