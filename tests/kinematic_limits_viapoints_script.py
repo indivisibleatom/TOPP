@@ -45,7 +45,6 @@ figure_index = figure_index + 1
 # Constraints
 vmax = float(sys.argv[2])*np.ones(traj0.dimension)
 amax = float(sys.argv[3])*np.ones(traj0.dimension)
-print(vmax)
 mrr_desired = float(sys.argv[4])
 
 # Set up the TOPP instance

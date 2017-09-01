@@ -37,7 +37,7 @@ def InterpolateVolumeRates(volumes, path):
     for i in range(nviapoints-1):
         tv[i+1] = tv[i]+linalg.norm(path[:,i]-path[:,i+1])
     volume_rates = zeros_like(tv)
-    volume_rates[:-1] = div0(volumes[:-1], tv[1:]-tv[:-1])
+    volume_rates[1:] = div0((volumes[1:]+volumes[:-1])/2, tv[1:]-tv[:-1])
     return Trajectory.PChipTrajectory(interpolate.pchip(tv, volume_rates), tv[-1])
     #tcklist.append(interpolate.splrep(tv,volumes,s=0,k=1))
     #t = tcklist[0][0]

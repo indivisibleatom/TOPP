@@ -200,9 +200,9 @@ def PlotTSMap(traj, svalues, figstart=1):
         times.append(current_time)
         current_time = current_time + chunk.duration
     plot(times, svalues)
-    title("Variation of s with time")
-    xlabel("$t$")
-    ylabel("$s$")
+    title("Variation of s with time", fontsize=20)
+    xlabel("$t$", fontsize=18)
+    ylabel("$s$", fontsize=18)
 
 def PlotComputedProfiles(topp_bind, figstart=1):
     topp_bind.WriteProfilesList()
@@ -254,7 +254,7 @@ def PlotKinematics(traj0, traj1, dt=0.01, vmax=[], amax=[], figstart=0):
     traj1.Plot(dt)
     title('Joint values', fontsize=20)
     xlabel('Time (s)', fontsize=18)
-    ylabel('Joint values (rad)', fontsize=18)
+    ylabel('Joint values', fontsize=18)
 
     # Velocity
     figure(figstart + 1)
@@ -275,7 +275,7 @@ def PlotKinematics(traj0, traj1, dt=0.01, vmax=[], amax=[], figstart=0):
         axis([0, Tmax, -Vmax, Vmax])
     title('Joint velocities', fontsize=20)
     xlabel('Time (s)', fontsize=18)
-    ylabel('Joint velocities (rad/s)', fontsize=18)
+    ylabel('Joint velocities', fontsize=18)
 
     # Acceleration
     figure(figstart + 2)
@@ -294,10 +294,7 @@ def PlotKinematics(traj0, traj1, dt=0.01, vmax=[], amax=[], figstart=0):
         axis([0, Tmax, -Amax, Amax])
     title('Joint accelerations', fontsize=20)
     xlabel('Time (s)', fontsize=18)
-    ylabel('Joint accelerations (rad/s^2)', fontsize=18)
-
-    figure(figstart + 3)
-    clf()
+    ylabel('Joint accelerations', fontsize=18)
 
 def PlotMRR(traj, volume_rates, svalues, dt=0.01, mrr_desired=[], figstart=0):
     from pylab import figure, clf, hold, gca, title, xlabel, ylabel, plot, axis, cycler
@@ -342,13 +339,13 @@ def PlotMRR(traj, volume_rates, svalues, dt=0.01, mrr_desired=[], figstart=0):
                            ds_for_dt in zip(s_for_dts, ds_for_dts)]
 
     qdvect = array([traj.Evald(t) for t in tvect])
-    plot(tvect, np.linalg.norm(qdvect, axis=1), 'r--', linewidth=2)
-    plot(tvect, volumes_dt, 'b--', linewidth=2)
+    #plot(tvect, np.linalg.norm(qdvect, axis=1), 'r--', linewidth=2)
+    #plot(tvect, volumes_dt, 'b--', linewidth=2)
     plot(tvect, (volumes_dt/dt), 'g', linewidth=2)
     for mrr in mrr_desired:
-        plot([0, Tmax], [mrr, mrr], 'g-.')
+        plot([0, Tmax], [mrr, mrr], 'b-.')
     for mrr in mrr_desired:
-        plot([0, Tmax], [0, 0], 'g-.')
+        plot([0, Tmax], [0, 0], 'b-.')
     #if len(mrr_desired) > 0:
     #    Vmax = 1.2 * max(vmax)
     #    if Vmax < 0.1:
