@@ -41,6 +41,27 @@ class Polynomial(object):
     def __str__(self):
         return ' '.join(map(str, self.coeff_list))
 
+class PChipTrajectory():
+    def __init__(self, pchip, duration):
+        self.pchip = pchip
+        self.derivative = pchip.derivative()
+        self.duration = duration
+
+    def Plot(self, dt, f=''):
+        tvect = arange(0, self.duration + dt, dt)
+        qvect = array([self.pchip(t) for t in tvect])
+        plot(tvect, qvect, f, linewidth=2)
+
+    def Plotd(self, dt, f=''):
+        tvect = arange(0, self.duration + dt, dt)
+        qdvect = array([self.derivative(t) for t in tvect])
+        plot(tvect, qdvect, f, linewidth=2)
+
+    def Eval(self, t):
+        return self.pchip(t)
+
+    def Evald(self, t):
+        return self.derivative(t)
 
 class Chunk():
     def __init__(self, duration, poly_list):
@@ -161,7 +182,6 @@ def CropChunk(c, s0, s1):
             Pin = polyder(Pin)
         polynomialsvector.append(Polynomial(coeffs))
     return Chunk(s1-s0, polynomialsvector)
-            
 
 # Assumes that i0 < i1
 def InsertIntoTrajectory(traj,traj2,s0,s1):

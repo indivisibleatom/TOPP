@@ -123,8 +123,8 @@ def ComputeKinematicConstraints(traj, amax, discrtimestep):
 
 ################# Compute MMR Constraints #####################
 
-def ComputeMaterialRemovalConstraints(traj, amax, mrr_desired, volumes,
-                                       discrtimestep):
+def ComputeMaterialRemovalConstraints(traj, amax, mrr_desired, volume_rate,
+                                      discrtimestep):
     # Sample the MMR constraints. Some linear interpolation for volume.
     ndiscrsteps = int((traj.duration + 1e-10) / discrtimestep) + 1
     constraintstring = ""
@@ -132,11 +132,11 @@ def ComputeMaterialRemovalConstraints(traj, amax, mrr_desired, volumes,
         t = i * discrtimestep
         qd = traj.Evald(t)
         qdd = traj.Evaldd(t)
-        volume = volumes[i]
+        volume = volume_rate.Eval(t)
         speed2 = np.linalg.norm(qd)**2
         constraintstring += "\n" + vect2str(+qd) + " " + vect2str(-qd) + " " + str(0)
         # MRR = Vol / Time = vol / (dist/speed) = Vol * speed / dist
-        constraintstring += "\n" + vect2str(+qdd) + " " + vect2str(-qdd) + " " + str((speed2 * volume**2))
+        constraintstring += "\n" + vect2str(+qdd) + " " + vect2str(-qdd) + " " + str(volume**2)
         constraintstring += "\n" + vect2str(-amax) + " " + vect2str(-amax) + " " + str(-(mrr_desired**2))
     return constraintstring
 
@@ -299,7 +299,7 @@ def PlotKinematics(traj0, traj1, dt=0.01, vmax=[], amax=[], figstart=0):
     figure(figstart + 3)
     clf()
 
-def PlotMRR(traj, volumes, svalues, dt=0.01, mrr_desired=[], figstart=0):
+def PlotMRR(traj, volume_rates, svalues, dt=0.01, mrr_desired=[], figstart=0):
     from pylab import figure, clf, hold, gca, title, xlabel, ylabel, plot, axis, cycler
     x = ['r', 'g', 'b', 'y', 'k']
     colorcycle = cycler('color', x[0:traj.dimension])
@@ -319,21 +319,36 @@ def PlotMRR(traj, volumes, svalues, dt=0.01, mrr_desired=[], figstart=0):
         times.append(current_time)
         current_time = current_time + chunk.duration
 
+    # Compute for each time, if it is contained in interval [tcur, tcur+dt] for
+    # tvect[0:-1]
     time_contained_in_dt = np.asarray([np.logical_and(times >= tvect[index],
                                                       times < tvect[index+1])
-                                            for index in np.arange(tvect.size-1)])
-    print time_contained_in_dt.shape, len(tvect)
-    sum_volumes_dt = np.zeros_like(tvect)
-    sum_volumes_dt[1:] = np.asarray([np.sum(volumes[time_contained_in_dt[index, :]]) for index in
-                                            np.arange(time_contained_in_dt.shape[0])])
+                                       for index in np.arange(tvect.size-1)])
+    # For each interval of tvect[0:-1], compute s values that are traversed in
+    # interval. Correspond these s-values to the beginning of the interval
+    s_for_dts = [svalues[time_contained_in_dt[index, :]] for index in np.arange(time_contained_in_dt.shape[0])]
+    # Use the s values to compute the ds values for each interval
+    ds_for_dts_firsts = [0] + [s_for_dt[0]-s_for_dt_last[-1] for s_for_dt, s_for_dt_last in
+                         zip(s_for_dts[1:], s_for_dts[:-1])]
+    ds_for_dts_others = [tuple(s_for_dt[1:]-s_for_dt[:-1]) for s_for_dt in s_for_dts]
+    ds_for_dts = [np.asarray((ds_for_dt_first,) + ds_for_dt_others) for
+                  ds_for_dt_first, ds_for_dt_others in zip(ds_for_dts_firsts,
+                                                           ds_for_dts_others)]
+
+    volumes_dt = np.zeros_like(tvect)
+    volumes_dt[1:] = [np.sum(np.asarray([volume_rates.Eval(s_for_dt[index]) *
+                           ds_for_dt[index] for index in
+                           np.arange(s_for_dt.size)])) for s_for_dt,
+                           ds_for_dt in zip(s_for_dts, ds_for_dts)]
 
     qdvect = array([traj.Evald(t) for t in tvect])
-    plot(tvect, np.linalg.norm(qdvect, axis=1), '--', linewidth=2)
-    plot(tvect, (np.linalg.norm(qdvect, axis=1) * sum_volumes_dt), '', linewidth=2)
+    plot(tvect, np.linalg.norm(qdvect, axis=1), 'r--', linewidth=2)
+    plot(tvect, volumes_dt, 'b--', linewidth=2)
+    plot(tvect, (volumes_dt/dt), 'g', linewidth=2)
     for mrr in mrr_desired:
-        plot([0, Tmax], [mrr, mrr], '-.')
+        plot([0, Tmax], [mrr, mrr], 'g-.')
     for mrr in mrr_desired:
-        plot([0, Tmax], [0, 0], '-.')
+        plot([0, Tmax], [0, 0], 'g-.')
     #if len(mrr_desired) > 0:
     #    Vmax = 1.2 * max(vmax)
     #    if Vmax < 0.1:
