@@ -24,6 +24,28 @@ def InterpolateViapoints(path):
             chunkslist.append(Trajectory.Chunk(t[i+1]-t[i],polylist))
     return Trajectory.PiecewisePolynomialTrajectory(chunkslist)
 
+def InterpolateJointSpaceViapoints(path, space_path):
+    nviapoints = len(space_path[0,:])
+    tv = linspace(0,1,nviapoints)
+    for i in range(nviapoints-1):
+        tv[i+1] = tv[i]+linalg.norm(space_path[:,i]-space_path[:,i+1])
+    tcklist = []
+    for idof in range(0,path.shape[0]):
+        tcklist.append(interpolate.splrep(tv,path[idof,:],s=0))
+    t = tcklist[0][0]
+    chunkslist = []
+    for i in range(len(t)-1):
+        polylist = []
+        if abs(t[i+1]-t[i])>1e-5:
+            for tck in tcklist:
+                a = 1/6. * interpolate.splev(t[i],tck,der=3)
+                b = 0.5 * interpolate.splev(t[i],tck,der=2)
+                c = interpolate.splev(t[i],tck,der=1)
+                d = interpolate.splev(t[i],tck,der=0)
+                polylist.append(Trajectory.Polynomial([d,c,b,a]))
+            chunkslist.append(Trajectory.Chunk(t[i+1]-t[i],polylist))
+    return Trajectory.PiecewisePolynomialTrajectory(chunkslist)
+
 def div0(a, b):
     """ ignore / 0, div0( [-1, 0, 1], 0 ) -> [0, 0, 0] """
     with errstate(divide='ignore', invalid='ignore'):

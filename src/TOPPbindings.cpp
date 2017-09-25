@@ -169,6 +169,16 @@ public:
         return sdd_lim.second;
     }
 
+    int RunComputeLimitCurves(TOPP::dReal sdbeg, TOPP::dReal sdend){
+        // Set tuning parameters
+        pconstraints->integrationtimestep = integrationtimestep;
+        pconstraints->passswitchpointnsteps = passswitchpointnsteps;
+        pconstraints->extrareps = extrareps;
+        pconstraints->stepthresh = 0.01;
+
+        bool retprocess = pconstraints->Preprocess();
+        return retprocess;
+    }
 
     int RunComputeProfiles(TOPP::dReal sdbeg, TOPP::dReal sdend){
         // Set tuning parameters
@@ -372,6 +382,7 @@ BOOST_PYTHON_MODULE(TOPPbindings) {
     .def_readonly("tsmapstring", &TOPPInstance::tsmapstring)
     .def("GetAlpha",&TOPPInstance::GetAlpha)
     .def("GetBeta",&TOPPInstance::GetBeta)
+    .def("RunComputeLimitCurves",&TOPPInstance::RunComputeLimitCurves)
     .def("RunComputeProfiles",&TOPPInstance::RunComputeProfiles)
     .def("ReparameterizeTrajectory",&TOPPInstance::ReparameterizeTrajectory, ReparameterizeTrajectory_overloads(args("reparamtimestep")))
     .def("RunAVP",&TOPPInstance::RunAVP)

@@ -143,7 +143,7 @@ def ComputeMaterialRemovalConstraints(traj, amax, mrr_desired, volume_rate,
 
 ######################## Plots ############################
 
-def PlotProfiles(profileslist0, switchpointslist=[], figstart=None, colorscheme = 1):
+def PlotProfiles(profileslist0, switchpointslist=[], max_sdot=20, figstart=None, colorscheme = 1):
     from pylab import figure, clf, hold, plot, gca, axis, title, xlabel, ylabel, cycler
     profileslist = list(profileslist0)
     if figstart is not None:
@@ -152,8 +152,8 @@ def PlotProfiles(profileslist0, switchpointslist=[], figstart=None, colorscheme 
     mvcbobrow = profileslist.pop(0)
     mvcdirect = profileslist.pop(0)
     if colorscheme == 1:
-        plot(mvcbobrow[2], mvcbobrow[3], 'c', linewidth=4)
-        plot(mvcdirect[2], mvcdirect[3], 'c--', linewidth=4)
+        plot(mvcbobrow[2], mvcbobrow[3], 'm', linewidth=1)
+        plot(mvcdirect[2], mvcdirect[3], 'g--', linewidth=1)
     else:
         plot(mvcbobrow[2], mvcbobrow[3], 'm', linewidth=4)
         plot(mvcdirect[2], mvcdirect[3], 'm--', linewidth=4)
@@ -165,7 +165,7 @@ def PlotProfiles(profileslist0, switchpointslist=[], figstart=None, colorscheme 
     if len(profileslist) > 0:
         M = 2 * max([max(p[3]) for p in profileslist])
     else:
-        M = 20
+        M = max_sdot
         bobrow = list(filter((lambda x: x < M), mvcbobrow[3]))
         direct = list(filter((lambda x: x < M), mvcdirect[3]))
         if len(bobrow) > 0:
