@@ -155,8 +155,8 @@ def PlotProfiles(profileslist0, switchpointslist=[], max_sdot=20, figstart=None,
         plot(mvcbobrow[2], mvcbobrow[3], 'm', linewidth=1)
         plot(mvcdirect[2], mvcdirect[3], 'g--', linewidth=1)
     else:
-        plot(mvcbobrow[2], mvcbobrow[3], 'm', linewidth=4)
-        plot(mvcdirect[2], mvcdirect[3], 'm--', linewidth=4)
+        plot(mvcbobrow[2], mvcbobrow[3], 'm', linewidth=1)
+        plot(mvcdirect[2], mvcdirect[3], 'g--', linewidth=1)
     colorcycle = cycler('color', ['r', 'g', 'b', 'y', 'k'])
     ax = gca()
     ax.set_prop_cycle(colorcycle)
