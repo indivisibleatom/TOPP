@@ -157,7 +157,7 @@ def PlotProfiles(profileslist0, switchpointslist=[], max_sdot=20, figstart=None,
     else:
         plot(mvcbobrow[2], mvcbobrow[3], 'm', linewidth=1)
         plot(mvcdirect[2], mvcdirect[3], 'g--', linewidth=1)
-    colorcycle = cycler('color', ['r', 'g', 'b', 'y', 'k'])
+    colorcycle = cycler('color', ['r', 'g', 'b', 'c', 'm'])
     ax = gca()
     ax.set_prop_cycle(colorcycle)
     for p in profileslist:
@@ -240,7 +240,7 @@ def PlotAlphaBeta(topp_inst, prec=30):
 
 def PlotKinematics(traj0, traj1, dt=0.01, vmax=[], amax=[], figstart=0):
     from pylab import figure, clf, hold, gca, title, xlabel, ylabel, plot, axis, cycler, show
-    x = ['r', 'g', 'b', 'y', 'k']
+    x = ['r', 'g', 'b', 'c', 'm']
     colorcycle = cycler('color', x[0:traj0.dimension])
     Tmax = max(traj0.duration, traj1.duration)
 
@@ -298,7 +298,7 @@ def PlotKinematics(traj0, traj1, dt=0.01, vmax=[], amax=[], figstart=0):
 
 def PlotMRR(traj, volume_rates, svalues, dt=0.01, mrr_desired=[], figstart=0):
     from pylab import figure, clf, hold, gca, title, xlabel, ylabel, plot, axis, cycler
-    x = ['r', 'g', 'b', 'y', 'k']
+    x = ['r', 'g', 'b', 'c', 'm']
     colorcycle = cycler('color', x[0:traj.dimension])
     Tmax = traj.duration
 
