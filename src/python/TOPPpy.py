@@ -199,10 +199,11 @@ def PlotTSMap(traj, svalues, figstart=1):
     for chunk in traj.chunkslist:
         times.append(current_time)
         current_time = current_time + chunk.duration
-    plot(times, svalues)
-    title("Variation of s with time", fontsize=20)
-    xlabel("$t$", fontsize=18)
-    ylabel("$s$", fontsize=18)
+    plot(svalues, times)
+    #title("Variation of t with s", fontsize=20)
+    hfont = {'fontname':'Arial'}
+    xlabel("$s$", fontsize=18, **hfont)
+    ylabel("$t$", fontsize=18, **hfont)
 
 def PlotComputedProfiles(topp_bind, figstart=1):
     topp_bind.WriteProfilesList()
