@@ -3,8 +3,8 @@ import bisect
 import pylab, scipy
 import io
 
-
-from pylab import arange, array, double, plot, zeros
+import matplotlib.pyplot as plt
+from pylab import arange, array, double, zeros
 
 
 class Polynomial(object):
@@ -50,12 +50,12 @@ class PChipTrajectory():
     def Plot(self, dt, f=''):
         tvect = arange(0, self.duration + dt, dt)
         qvect = array([self.pchip(t) for t in tvect])
-        plot(tvect, qvect, f, linewidth=2)
+        plt.gca().plot(tvect, qvect, f, linewidth=2)
 
     def Plotd(self, dt, f=''):
         tvect = arange(0, self.duration + dt, dt)
         qdvect = array([self.derivative(t) for t in tvect])
-        plot(tvect, qdvect, f, linewidth=2)
+        plt.gca().plot(tvect, qdvect, f, linewidth=2)
 
     def Eval(self, t):
         return self.pchip(t)
@@ -158,17 +158,17 @@ class PiecewisePolynomialTrajectory():
     def Plot(self, dt, f=''):
         tvect = arange(0, self.duration + dt, dt)
         qvect = array([self.Eval(t) for t in tvect])
-        plot(tvect, qvect, f, linewidth=2)
+        plt.gca().plot(tvect, qvect, f, linewidth=2)
 
     def Plotd(self, dt, f=''):
         tvect = arange(0, self.duration + dt, dt)
         qdvect = array([self.Evald(t) for t in tvect])
-        plot(tvect, qdvect, f, linewidth=2)
+        plt.gca().plot(tvect, qdvect, f, linewidth=2)
 
     def Plotdd(self, dt, f=''):
         tvect = arange(0, self.duration + dt, dt)
         qddvect = array([self.Evaldd(t) for t in tvect])
-        plot(tvect, qddvect, f, linewidth=2)
+        plt.gca().plot(tvect, qddvect, f, linewidth=2)
 
     def __str__(self):
         return '\n'.join([str(chunk) for chunk in self.chunkslist])

@@ -25,7 +25,7 @@ endif()
 file(GLOB topp_files ${CMAKE_CURRENT_SOURCE_DIR}/*.h ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp)
 
 add_library(TOPPbindings SHARED ${topp_files})
-add_python_module(python TOPP)
+add_python_module(TOPP python TOPP)
 
 # Output bindings to python module dir
 set_target_properties(TOPPbindings PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib/python/TOPP)
