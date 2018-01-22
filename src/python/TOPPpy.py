@@ -109,7 +109,7 @@ def GenerateRandomTrajectory(ncurve, ndof, bound):
 
 def ComputeKinematicConstraints(traj, amax, discrtimestep):
     # Sample the dynamics constraints
-    ndiscrsteps = int((traj.duration + 1e-10) / discrtimestep) + 1
+    ndiscrsteps = int((traj.duration+1e-10) / discrtimestep) + 1
     constraintstring = ""
     for i in range(ndiscrsteps):
         t = i * discrtimestep

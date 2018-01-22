@@ -226,6 +226,8 @@ public:
         stepthresh = 0.01;
     }
 
+    virtual ~Constraints() {}
+
     // Check input after this->trajectory has been set (from TOPPbindings)
     virtual void CheckInput() {
     }

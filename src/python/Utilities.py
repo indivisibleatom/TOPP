@@ -2,7 +2,7 @@ from numpy import *
 from scipy import interpolate
 from . import Trajectory
 
-# Interpolate using passed in distances to create initial geometry
+# Interpolate using passed in distances to create initial geometry.
 def InterpolateViapoints(path, distances):
     tv = distances
     tcklist = []
@@ -12,6 +12,9 @@ def InterpolateViapoints(path, distances):
     chunkslist = []
     for i in range(len(t)-1):
         polylist = []
+        # If time difference > 1e-5. Anything less than this is taken to be
+        # noise -- this also filters out first and last entries of TCK result
+        # with fixed knot values.
         if abs(t[i+1]-t[i])>1e-5:
             for tck in tcklist:
                 a = 1/6. * interpolate.splev(t[i],tck,der=3)
@@ -20,6 +23,8 @@ def InterpolateViapoints(path, distances):
                 d = interpolate.splev(t[i],tck,der=0)
                 polylist.append(Trajectory.Polynomial([d,c,b,a]))
             chunkslist.append(Trajectory.Chunk(t[i+1]-t[i],polylist))
+    # Initially, each chunk in the trajectory is a single cubic (vector of)
+    # polynomials
     return Trajectory.PiecewisePolynomialTrajectory(chunkslist)
 
 def div0(a, b):
@@ -34,20 +39,6 @@ def InterpolateVolumeRates(volumes, distances):
     volume_rates = zeros_like(tv)
     volume_rates[1:] = div0((volumes[1:]+volumes[:-1])/2, tv[1:]-tv[:-1])
     return Trajectory.PChipTrajectory(interpolate.pchip(tv, volume_rates), tv[-1])
-    #tcklist.append(interpolate.splrep(tv,volumes,s=0,k=1))
-    #t = tcklist[0][0]
-    #chunkslist = []
-    #for i in range(len(t)-1):
-    #    polylist = []
-    #    if abs(t[i+1]-t[i])>1e-5:
-    #        for tck in tcklist:
-    #            a = 0
-    #            b = 0
-    #            c = interpolate.splev(t[i],tck,der=1)
-    #            d = interpolate.splev(t[i],tck,der=0)
-    #            polylist.append(Trajectory.Polynomial([d,c,b,a]))
-    #        chunkslist.append(Trajectory.Chunk(t[i+1]-t[i],polylist))
-    #return Trajectory.PiecewisePolynomialTrajectory(chunkslist)
 
 def BezierToPolynomial(T, p0, p1, p2, p3):
     a = -p0 + 3 * p1 - 3 * p2 + p3

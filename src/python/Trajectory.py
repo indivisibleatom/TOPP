@@ -6,7 +6,7 @@ import io
 import matplotlib.pyplot as plt
 from pylab import arange, array, double, zeros
 
-
+# A single polynomial piece
 class Polynomial(object):
     @staticmethod
     def FromString(polynomial_string):
@@ -63,6 +63,7 @@ class PChipTrajectory():
     def Evald(self, t):
         return self.derivative(t)
 
+# A chunk is a list of polynomials, with potentially varying degree
 class Chunk():
     def __init__(self, duration, poly_list):
         self.polynomialsvector = poly_list
@@ -71,6 +72,8 @@ class Chunk():
 
         # TODO: current limitation in polynomials
         degrees = [poly.degree for poly in poly_list]
+        # The degree of a chunk is the max degree of any polynomial in the
+        # chunk
         self.degree = max(degrees)
         for poly in poly_list:
             poly.pad_coeff_string(self.degree)
@@ -102,9 +105,10 @@ class Chunk():
 
     def __str__(self):
         chunks_str = '\n'.join(map(str, self.polynomialsvector))
-        return '%f\n%d\n%s' % (self.duration, self.dimension, chunks_str)
+        return '%s\n%d\n%s' % (str(self.duration), self.dimension, chunks_str)
 
 
+# A PPT is a list of Chunks (which themselves are list of polynomials)
 class PiecewisePolynomialTrajectory():
     def __init__(self, chunkslist):
         self.chunkslist = chunkslist

@@ -13,6 +13,7 @@
 # limitations under the License.
 
 # copy the python files
+set(CMAKE_BUILD_TYPE Debug)
 
 # include python bindings sample
 if( OpenRAVE_FOUND )
